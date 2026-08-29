@@ -27,6 +27,13 @@ Two data platforms. Different architectures. Different telemetry. **One operatio
                  observations + incidents
 ```
 
+## Dashboard
+
+![DataOps Control Plane dashboard](docs/images/dataops-dashboard.png)
+
+A unified operational view across AdStream and Kenya Economic, showing fleet health, live telemetry, pipeline state, quality, source freshness, and incidents.
+
+
 The control plane answers the questions that matter after a pipeline reaches production:
 
 **Is it up? Did the pipeline succeed? Is the data fresh? Did quality pass? What failed? Has it recovered?**
