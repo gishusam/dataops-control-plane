@@ -40,13 +40,23 @@ class KenyaEconomicAdapter(PlatformAdapter):
         return str(value)
 
     @staticmethod
-    def _value(row, key, default=None):
+    def _value(
+        row,
+        key,
+        default=None,
+    ):
         if isinstance(row, dict):
-            return row.get(key, default)
+            return row.get(
+                key,
+                default,
+            )
 
         try:
             return row[key]
-        except (KeyError, TypeError):
+        except (
+            KeyError,
+            TypeError,
+        ):
             return getattr(
                 row,
                 key,
@@ -62,6 +72,7 @@ class KenyaEconomicAdapter(PlatformAdapter):
                 name="economic-refresh",
                 status="unknown",
             ),
+            incidents_open=1,
         )
 
     def collect(self) -> PlatformHealth:
@@ -122,7 +133,8 @@ class KenyaEconomicAdapter(PlatformAdapter):
             and completed_at is not None
         ):
             duration_seconds = (
-                completed_at - started_at
+                completed_at
+                - started_at
             ).total_seconds()
 
         freshness = []
@@ -202,13 +214,15 @@ class KenyaEconomicAdapter(PlatformAdapter):
 
         quality_passed = (
             1
-            if dbt_status == "success"
+            if dbt_status
+            == "success"
             else 0
         )
 
         quality_failed = (
             0
-            if dbt_status == "success"
+            if dbt_status
+            == "success"
             else 1
         )
 
@@ -226,7 +240,8 @@ class KenyaEconomicAdapter(PlatformAdapter):
                     self._iso(
                         completed_at
                     )
-                    if status == "success"
+                    if status
+                    == "success"
                     else None
                 ),
             ),
@@ -236,5 +251,11 @@ class KenyaEconomicAdapter(PlatformAdapter):
             ),
             quality_checks_failed=(
                 quality_failed
+            ),
+            incidents_open=(
+                0
+                if platform_status
+                == "healthy"
+                else 1
             ),
         )

@@ -2,7 +2,7 @@
 
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 PlatformStatus = Literal[
@@ -22,6 +22,12 @@ FreshnessStatus = Literal[
     "current",
     "stale",
     "degraded",
+    "unknown",
+]
+
+TelemetryState = Literal[
+    "live",
+    "stale",
     "unknown",
 ]
 
@@ -46,14 +52,15 @@ class PlatformHealth(BaseModel):
     platform: str
     environment: str = "demo"
     status: PlatformStatus
+    telemetry_state: TelemetryState = "live"
+    observed_at: str | None = None
+
     pipeline: PipelineHealth
 
-    # Generic scalar retained for platforms that naturally expose one
-    # freshness value.
     freshness_seconds: float | None = None
-
-    # Source-aware freshness for batch platforms such as Kenya Economic.
-    sources: list[SourceFreshness] = []
+    sources: list[SourceFreshness] = Field(
+        default_factory=list
+    )
 
     quality_checks_passed: int = 0
     quality_checks_failed: int = 0

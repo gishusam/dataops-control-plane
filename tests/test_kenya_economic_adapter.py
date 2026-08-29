@@ -1,4 +1,7 @@
-from datetime import datetime, timezone
+from datetime import (
+    datetime,
+    timezone,
+)
 
 from src.control_plane.adapters.kenya_economic import (
     KenyaEconomicAdapter,
@@ -6,7 +9,10 @@ from src.control_plane.adapters.kenya_economic import (
 
 
 class FakeJob:
-    def __init__(self, rows):
+    def __init__(
+        self,
+        rows,
+    ):
         self.rows = rows
 
     def result(self):
@@ -20,11 +26,20 @@ class FakeClient:
                 {
                     "run_id": "run-001",
                     "started_at": datetime(
-                        2026, 8, 28, 6, 0,
+                        2026,
+                        8,
+                        28,
+                        6,
+                        0,
                         tzinfo=timezone.utc,
                     ),
                     "completed_at": datetime(
-                        2026, 8, 28, 6, 0, 42,
+                        2026,
+                        8,
+                        28,
+                        6,
+                        0,
+                        42,
                         tzinfo=timezone.utc,
                     ),
                     "status": "success",
@@ -45,7 +60,11 @@ class FakeClient:
                     "expected_max_age_days": 4,
                     "freshness_status": "CURRENT",
                     "last_checked_at": datetime(
-                        2026, 8, 28, 6, 0,
+                        2026,
+                        8,
+                        28,
+                        6,
+                        0,
                         tzinfo=timezone.utc,
                     ),
                     "last_error": None,
@@ -56,7 +75,11 @@ class FakeClient:
                     "expected_max_age_days": 45,
                     "freshness_status": "CURRENT",
                     "last_checked_at": datetime(
-                        2026, 8, 28, 6, 0,
+                        2026,
+                        8,
+                        28,
+                        6,
+                        0,
                         tzinfo=timezone.utc,
                     ),
                     "last_error": None,
@@ -67,7 +90,11 @@ class FakeClient:
                     "expected_max_age_days": 400,
                     "freshness_status": "CURRENT",
                     "last_checked_at": datetime(
-                        2026, 8, 28, 6, 0,
+                        2026,
+                        8,
+                        28,
+                        6,
+                        0,
                         tzinfo=timezone.utc,
                     ),
                     "last_error": None,
@@ -75,6 +102,13 @@ class FakeClient:
             ])
 
         raise AssertionError(sql)
+
+
+class FailingClient:
+    def query(self, sql):
+        raise RuntimeError(
+            "BigQuery unavailable"
+        )
 
 
 def test_kenya_economic_adapter_normalizes_bigquery_health():
@@ -99,11 +133,7 @@ def test_kenya_economic_adapter_normalizes_bigquery_health():
 
     assert health.quality_checks_passed == 1
     assert health.quality_checks_failed == 0
-
-
-class FailingClient:
-    def query(self, sql):
-        raise RuntimeError("BigQuery unavailable")
+    assert health.incidents_open == 0
 
 
 def test_kenya_economic_adapter_reports_unavailable():
@@ -116,3 +146,4 @@ def test_kenya_economic_adapter_reports_unavailable():
 
     assert health.status == "unavailable"
     assert health.pipeline.status == "unknown"
+    assert health.incidents_open == 1

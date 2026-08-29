@@ -33,6 +33,7 @@ class AdStreamAdapter(PlatformAdapter):
             ),
             quality_checks_passed=0,
             quality_checks_failed=0,
+            incidents_open=1,
         )
 
     def collect(self) -> PlatformHealth:
@@ -46,7 +47,6 @@ class AdStreamAdapter(PlatformAdapter):
             )
 
             response.raise_for_status()
-
             data = response.json()
 
         except (
@@ -154,4 +154,10 @@ class AdStreamAdapter(PlatformAdapter):
             ),
             quality_checks_passed=passed,
             quality_checks_failed=failed,
+            incidents_open=(
+                0
+                if platform_status
+                == "healthy"
+                else 1
+            ),
         )

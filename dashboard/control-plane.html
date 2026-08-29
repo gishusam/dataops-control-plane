@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width,initial-scale=1">
+
+<title>DataOps Control Plane</title>
+
+<style>
+:root {
+  --bg: #090d14;
+  --surface: #101620;
+  --surface-2: #151d29;
+  --border: #222d3b;
+  --text: #f5f7fa;
+  --muted: #8390a3;
+  --green: #35d07f;
+  --amber: #f2b84b;
+  --red: #ff6464;
+  --blue: #58a6ff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(
+      circle at top right,
+      rgba(88,166,255,.07),
+      transparent 30%
+    ),
+    var(--bg);
+  color: var(--text);
+  font-family:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+}
+
+.shell {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 38px 42px 60px;
+}
+
+header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.eyebrow {
+  font-size: 12px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--blue);
+  font-weight: 700;
+}
+
+h1 {
+  margin: 8px 0 8px;
+  font-size: 34px;
+  line-height: 1.05;
+}
+
+.subtitle {
+  color: var(--muted);
+  font-size: 15px;
+}
+
+.live-pill {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  padding: 10px 14px;
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.grid {
+  display: grid;
+  gap: 18px;
+}
+
+.platform-grid {
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+  margin-bottom: 18px;
+}
+
+.kpi-grid {
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+  margin-bottom: 18px;
+}
+
+.split {
+  grid-template-columns:
+    1.25fr .75fr;
+}
+
+.card {
+  border: 1px solid var(--border);
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,.015),
+      transparent
+    ),
+    var(--surface);
+  border-radius: 16px;
+  padding: 20px;
+}
+
+.platform-card {
+  min-height: 190px;
+}
+
+.card-label {
+  color: var(--muted);
+  font-size: 12px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.platform-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.platform-name {
+  font-size: 24px;
+  font-weight: 720;
+  margin-top: 8px;
+}
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 760;
+}
+
+.status::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.healthy {
+  color: var(--green);
+  background: rgba(53,208,127,.10);
+}
+
+.degraded {
+  color: var(--amber);
+  background: rgba(242,184,75,.10);
+}
+
+.unavailable {
+  color: var(--red);
+  background: rgba(255,100,100,.10);
+}
+
+.stale {
+  color: var(--amber);
+  background: rgba(242,184,75,.10);
+}
+
+.meta-row {
+  display: grid;
+  grid-template-columns:
+    repeat(3, 1fr);
+  gap: 14px;
+  margin-top: 28px;
+}
+
+.meta-value {
+  font-size: 18px;
+  font-weight: 700;
+  margin-top: 5px;
+}
+
+.meta-label {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.telemetry {
+  margin-top: 18px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.telemetry strong {
+  color: var(--text);
+}
+
+.kpi {
+  min-height: 118px;
+}
+
+.kpi-value {
+  font-size: 30px;
+  font-weight: 760;
+  margin-top: 15px;
+}
+
+.kpi-detail {
+  color: var(--muted);
+  font-size: 12px;
+  margin-top: 7px;
+}
+
+.section-title {
+  font-size: 17px;
+  font-weight: 720;
+  margin-bottom: 20px;
+}
+
+.source-row {
+  display: grid;
+  grid-template-columns:
+    120px 1fr 90px 90px;
+  gap: 14px;
+  align-items: center;
+  margin: 16px 0;
+}
+
+.source-name {
+  font-weight: 650;
+}
+
+.bar {
+  height: 8px;
+  background: #1c2633;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.bar > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--green);
+}
+
+.source-age,
+.source-state {
+  color: var(--muted);
+  font-size: 12px;
+  text-align: right;
+}
+
+.source-state.current {
+  color: var(--green);
+}
+
+.incident {
+  padding: 14px 0;
+  border-top: 1px solid var(--border);
+}
+
+.incident:first-of-type {
+  border-top: 0;
+}
+
+.incident-type {
+  font-weight: 650;
+}
+
+.incident-meta {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 5px;
+}
+
+.empty {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+@media (max-width: 900px) {
+  .platform-grid,
+  .kpi-grid,
+  .split {
+    grid-template-columns: 1fr;
+  }
+
+  .source-row {
+    grid-template-columns: 100px 1fr;
+  }
+
+  .source-age,
+  .source-state {
+    text-align: left;
+  }
+}
+</style>
+</head>
+
+<body>
+<div class="shell">
+
+<header>
+  <div>
+    <div class="eyebrow">
+      Portfolio · Platform Operations
+    </div>
+
+    <h1>DataOps Control Plane</h1>
+
+    <div class="subtitle">
+      Unified operations across batch and streaming data platforms.
+    </div>
+  </div>
+
+  <div class="live-pill">
+    Refreshing every 15 seconds
+  </div>
+</header>
+
+<div id="platforms"
+     class="grid platform-grid">
+</div>
+
+<div id="kpis"
+     class="grid kpi-grid">
+</div>
+
+<div class="grid split">
+
+  <section class="card">
+    <div class="section-title">
+      Source Freshness
+    </div>
+
+    <div id="freshness"></div>
+  </section>
+
+  <section class="card">
+    <div class="section-title">
+      Incident Timeline
+    </div>
+
+    <div id="incidents"></div>
+  </section>
+
+</div>
+
+</div>
+
+<script>
+function prettyPlatform(name) {
+  const labels = {
+    "adstream": "AdStream",
+    "kenya-economic": "Kenya Economic"
+  };
+
+  return labels[name] || name;
+}
+
+function prettySource(name) {
+  if (name === "WORLD_BANK") {
+    return "World Bank";
+  }
+
+  return name;
+}
+
+function duration(value) {
+  if (value == null) {
+    return "—";
+  }
+
+  if (value < 60) {
+    return `${value.toFixed(1)}s`;
+  }
+
+  return `${(value / 60).toFixed(2)}m`;
+}
+
+function formatDate(value) {
+  if (!value) {
+    return "Never";
+  }
+
+  return new Date(value)
+    .toLocaleString();
+}
+
+function platformStatusClass(platform) {
+  if (platform.telemetry_state === "stale") {
+    return "stale";
+  }
+
+  if (platform.telemetry_state === "unknown") {
+    return "unavailable";
+  }
+
+  return platform.status;
+}
+
+function platformStatusText(platform) {
+  if (platform.telemetry_state === "stale") {
+    return "LAST KNOWN";
+  }
+
+  if (platform.telemetry_state === "unknown") {
+    return "UNKNOWN";
+  }
+
+  return platform.status.toUpperCase();
+}
+
+function renderPlatforms(platforms) {
+  document.getElementById("platforms")
+    .innerHTML = platforms.map(platform => `
+      <article class="card platform-card">
+
+        <div class="platform-top">
+
+          <div>
+            <div class="card-label">
+              ${platform.environment}
+            </div>
+
+            <div class="platform-name">
+              ${prettyPlatform(platform.platform)}
+            </div>
+          </div>
+
+          <div class="status ${platformStatusClass(platform)}">
+            ${platformStatusText(platform)}
+          </div>
+
+        </div>
+
+        <div class="meta-row">
+
+          <div>
+            <div class="meta-label">Pipeline</div>
+            <div class="meta-value">
+              ${platform.pipeline.status.toUpperCase()}
+            </div>
+          </div>
+
+          <div>
+            <div class="meta-label">Duration</div>
+            <div class="meta-value">
+              ${duration(platform.pipeline.duration_seconds)}
+            </div>
+          </div>
+
+          <div>
+            <div class="meta-label">Quality</div>
+            <div class="meta-value">
+              ${platform.quality_checks_passed}/${
+                platform.quality_checks_passed +
+                platform.quality_checks_failed
+              }
+            </div>
+          </div>
+
+        </div>
+
+        <div class="telemetry">
+          Telemetry:
+          <strong>
+            ${platform.telemetry_state.toUpperCase()}
+          </strong>
+          · Last observed:
+          <strong>
+            ${formatDate(platform.observed_at)}
+          </strong>
+        </div>
+
+      </article>
+    `).join("");
+}
+
+function renderKpis(platforms) {
+  const healthy = platforms.filter(
+    item => item.status === "healthy"
+  ).length;
+
+  const live = platforms.filter(
+    item => item.telemetry_state === "live"
+  ).length;
+
+  const incidents = platforms.reduce(
+    (sum, item) =>
+      sum + item.incidents_open,
+    0
+  );
+
+  const qualityPassed = platforms.reduce(
+    (sum, item) =>
+      sum + item.quality_checks_passed,
+    0
+  );
+
+  const qualityFailed = platforms.reduce(
+    (sum, item) =>
+      sum + item.quality_checks_failed,
+    0
+  );
+
+  document.getElementById("kpis")
+    .innerHTML = `
+      <article class="card kpi">
+        <div class="card-label">Fleet Health</div>
+        <div class="kpi-value">
+          ${healthy} / ${platforms.length}
+        </div>
+        <div class="kpi-detail">
+          Last known healthy
+        </div>
+      </article>
+
+      <article class="card kpi">
+        <div class="card-label">Live Telemetry</div>
+        <div class="kpi-value">
+          ${live} / ${platforms.length}
+        </div>
+        <div class="kpi-detail">
+          Sources currently reachable
+        </div>
+      </article>
+
+      <article class="card kpi">
+        <div class="card-label">Quality</div>
+        <div class="kpi-value">
+          ${qualityPassed} / ${
+            qualityPassed + qualityFailed
+          }
+        </div>
+        <div class="kpi-detail">
+          Passing operational checks
+        </div>
+      </article>
+
+      <article class="card kpi">
+        <div class="card-label">Open Incidents</div>
+        <div class="kpi-value">
+          ${incidents}
+        </div>
+        <div class="kpi-detail">
+          Current operational events
+        </div>
+      </article>
+    `;
+}
+
+function renderFreshness(platforms) {
+  const sources = platforms.flatMap(
+    platform => platform.sources || []
+  );
+
+  const target =
+    document.getElementById("freshness");
+
+  if (!sources.length) {
+    target.innerHTML =
+      '<div class="empty">No source freshness telemetry.</div>';
+    return;
+  }
+
+  target.innerHTML = sources.map(source => {
+    const percent = source.threshold_days
+      ? Math.min(
+          100,
+          (source.age_days /
+           source.threshold_days) * 100
+        )
+      : 0;
+
+    return `
+      <div class="source-row">
+
+        <div class="source-name">
+          ${prettySource(source.source)}
+        </div>
+
+        <div class="bar">
+          <span style="width:${percent}%"></span>
+        </div>
+
+        <div class="source-age">
+          ${source.age_days}d /
+          ${source.threshold_days}d
+        </div>
+
+        <div class="source-state ${source.status}">
+          ${source.status.toUpperCase()}
+        </div>
+
+      </div>
+    `;
+  }).join("");
+}
+
+function renderIncidents(items) {
+  const target =
+    document.getElementById("incidents");
+
+  if (!items.length) {
+    target.innerHTML =
+      '<div class="empty">No incident history yet.</div>';
+    return;
+  }
+
+  target.innerHTML = items.map(item => `
+    <div class="incident">
+
+      <div class="incident-type">
+        ${prettyPlatform(item.platform)}
+        · ${item.event_type.replaceAll("_", " ")}
+      </div>
+
+      <div class="incident-meta">
+        ${item.message}
+        · ${formatDate(item.occurred_at)}
+      </div>
+
+    </div>
+  `).join("");
+}
+
+async function refresh() {
+  try {
+    const [
+      platformResponse,
+      incidentResponse
+    ] = await Promise.all([
+      fetch("/api/v1/platforms"),
+      fetch("/api/v1/incidents")
+    ]);
+
+    const platforms =
+      await platformResponse.json();
+
+    const incidents =
+      await incidentResponse.json();
+
+    renderPlatforms(platforms);
+    renderKpis(platforms);
+    renderFreshness(platforms);
+    renderIncidents(incidents);
+
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+refresh();
+
+setInterval(
+  refresh,
+  15000
+);
+</script>
+
+</body>
+</html>

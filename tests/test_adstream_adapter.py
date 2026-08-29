@@ -1,3 +1,5 @@
+import httpx
+
 from src.control_plane.adapters.adstream import (
     AdStreamAdapter,
 )
@@ -17,7 +19,9 @@ class FakeResponse:
                 "run_id": "manual__2026-08-28",
                 "status": "success",
                 "duration_ms": 83840,
-                "recorded_at": "2026-08-28T10:28:23+00:00",
+                "recorded_at": (
+                    "2026-08-28T10:28:23+00:00"
+                ),
             },
             "stages": [
                 {
@@ -42,12 +46,27 @@ class FakeResponse:
 
 
 class FakeClient:
-    def get(self, url, timeout):
+    def get(
+        self,
+        url,
+        timeout,
+    ):
         assert url.endswith(
             "/api/v1/pipeline-health"
         )
         assert timeout == 15.0
         return FakeResponse()
+
+
+class FailingClient:
+    def get(
+        self,
+        url,
+        timeout,
+    ):
+        raise httpx.ConnectError(
+            "connection refused"
+        )
 
 
 def test_adstream_adapter_normalizes_pipeline_health():
@@ -65,12 +84,7 @@ def test_adstream_adapter_normalizes_pipeline_health():
     assert health.pipeline.duration_seconds == 83.84
     assert health.quality_checks_passed == 4
     assert health.quality_checks_failed == 0
-class FailingClient:
-    def get(self, url, timeout):
-        import httpx
-        raise httpx.ConnectError(
-            "connection refused"
-        )
+    assert health.incidents_open == 0
 
 
 def test_adstream_adapter_reports_unavailable_when_source_is_down():
@@ -78,9 +92,12 @@ def test_adstream_adapter_reports_unavailable_when_source_is_down():
         base_url="http://adstream:8010",
         client=FailingClient(),
     )
+
     health = adapter.collect()
+
     assert health.platform == "adstream"
     assert health.status == "unavailable"
     assert health.pipeline.status == "unknown"
     assert health.quality_checks_passed == 0
     assert health.quality_checks_failed == 0
+    assert health.incidents_open == 1

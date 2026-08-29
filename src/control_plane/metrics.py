@@ -1,4 +1,4 @@
-"""Prometheus metric generation for normalized platform health."""
+"""Prometheus metrics for normalized platform health."""
 
 from prometheus_client import (
     CollectorRegistry,
@@ -18,8 +18,21 @@ def render_metrics(
 
     platform_up = Gauge(
         "dataops_platform_up",
-        "Whether the managed platform is healthy.",
-        ["platform", "environment"],
+        "Last known operational health.",
+        [
+            "platform",
+            "environment",
+        ],
+        registry=registry,
+    )
+
+    telemetry_live = Gauge(
+        "dataops_telemetry_live",
+        "Whether current live telemetry is available.",
+        [
+            "platform",
+            "environment",
+        ],
         registry=registry,
     )
 
@@ -36,28 +49,37 @@ def render_metrics(
 
     quality_passed = Gauge(
         "dataops_quality_checks_passed",
-        "Number of passing quality checks.",
-        ["platform", "environment"],
+        "Passing quality checks.",
+        [
+            "platform",
+            "environment",
+        ],
         registry=registry,
     )
 
     quality_failed = Gauge(
         "dataops_quality_checks_failed",
-        "Number of failing quality checks.",
-        ["platform", "environment"],
+        "Failing quality checks.",
+        [
+            "platform",
+            "environment",
+        ],
         registry=registry,
     )
 
     incidents_open = Gauge(
         "dataops_incidents_open",
-        "Number of currently open incidents.",
-        ["platform", "environment"],
+        "Currently open incidents.",
+        [
+            "platform",
+            "environment",
+        ],
         registry=registry,
     )
 
     source_freshness = Gauge(
         "dataops_source_freshness_days",
-        "Age of the latest source observation.",
+        "Age of latest source observation.",
         [
             "platform",
             "source",
@@ -66,7 +88,7 @@ def render_metrics(
         registry=registry,
     )
 
-    source_freshness_limit = Gauge(
+    freshness_limit = Gauge(
         "dataops_source_freshness_limit_days",
         "Maximum expected source age.",
         [
@@ -79,7 +101,7 @@ def render_metrics(
 
     source_current = Gauge(
         "dataops_source_current",
-        "Whether a source is currently within its freshness contract.",
+        "Whether source meets freshness contract.",
         [
             "platform",
             "source",
@@ -103,6 +125,15 @@ def render_metrics(
             else 0
         )
 
+        telemetry_live.labels(
+            **labels
+        ).set(
+            1
+            if platform.telemetry_state
+            == "live"
+            else 0
+        )
+
         if (
             platform.pipeline
             .duration_seconds
@@ -110,12 +141,8 @@ def render_metrics(
         ):
             pipeline_duration.labels(
                 platform=platform.platform,
-                pipeline=(
-                    platform.pipeline.name
-                ),
-                environment=(
-                    platform.environment
-                ),
+                pipeline=platform.pipeline.name,
+                environment=platform.environment,
             ).set(
                 platform.pipeline
                 .duration_seconds
@@ -143,13 +170,9 @@ def render_metrics(
 
         for source in platform.sources:
             source_labels = {
-                "platform": (
-                    platform.platform
-                ),
+                "platform": platform.platform,
                 "source": source.source,
-                "environment": (
-                    platform.environment
-                ),
+                "environment": platform.environment,
             }
 
             if source.age_days is not None:
@@ -159,11 +182,8 @@ def render_metrics(
                     source.age_days
                 )
 
-            if (
-                source.threshold_days
-                is not None
-            ):
-                source_freshness_limit.labels(
+            if source.threshold_days is not None:
+                freshness_limit.labels(
                     **source_labels
                 ).set(
                     source.threshold_days

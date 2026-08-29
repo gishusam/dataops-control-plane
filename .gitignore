@@ -17,3 +17,17 @@ terraform.tfstate.*
 
 # Python packaging artifacts
 *.egg-info/
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+terraform.tfvars
+
+# Local editor settings
+.vscode/
+
+# Local Control Plane state
+data/*.db
+data/*.db-shm
+data/*.db-wal
